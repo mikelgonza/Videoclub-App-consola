@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.Text;
 using System.Threading;
 
 namespace Proyecto_Modulo_1
@@ -56,10 +57,9 @@ namespace Proyecto_Modulo_1
         {
             bool exit = false;
             int totalErrors = 5;
+            string password;
             int currentError = totalErrors;
             Customer customer = new Customer();
-            string password;
-            ConsoleKeyInfo key;
 
             Console.Clear();
 
@@ -74,32 +74,11 @@ namespace Proyecto_Modulo_1
                 string email = Console.ReadLine();
 
                 Console.Write("Enter password: ");
-                password = string.Empty;
 
                 // Hide password
-                do
-                {
-                    key = Console.ReadKey(true);
-
-                    // Ignore enter and backspace keys
-                    if (key.Key != ConsoleKey.Enter && key.Key != ConsoleKey.Backspace)
-                    {
-                        // Append the character to the password
-                        password += key.KeyChar;
-                        Console.Write("*");
-                    }
-                    // if key is backspace remove latest char
-                    else if (key.Key == ConsoleKey.Backspace && password.Length > 0)
-                    {
-                        password = password.Remove(password.Length - 1);
-                        Console.Write("\b \b");
-                    }
-
-                    // exit if enter key is pressed
-                } while (key.Key != ConsoleKey.Enter);
+                password = HidePassword();
 
                 Console.WriteLine();
-
 
                 // Check if login is ok
                 customer = CheckIfPasswordIsOk(email, password);
@@ -128,8 +107,11 @@ namespace Proyecto_Modulo_1
                         Console.Beep(200, 800);
 
                         Console.WriteLine();
-                        Console.WriteLine($"You have exceeded the number of attempts allowed ({totalErrors}), press a key to exit");
+                        Console.WriteLine($"You have exceeded the number of attempts allowed ({totalErrors})");
+                        Console.WriteLine("The application will close, press any key");
                         Console.ReadLine();
+                        Console.Clear();
+                        Environment.Exit(1);
                     }
                     else
                     {
@@ -150,9 +132,9 @@ namespace Proyecto_Modulo_1
 
         public static void RegisterUser()
         {
-            bool error;
-            DateTime birthdate = DateTime.Now;
-            string email, pass, name, surname;
+            bool exit;
+            string email, pass1, pass2, name, surname, message;
+            //ConsoleKeyInfo key;
             Customer customer = new Customer();
 
             Console.Clear();
@@ -164,7 +146,7 @@ namespace Proyecto_Modulo_1
             // Check name format
             do
             {
-                error = false;
+                exit = false;
 
                 Console.Write("Name: ");
                 name = Console.ReadLine();
@@ -173,20 +155,21 @@ namespace Proyecto_Modulo_1
                 {
                     // Name is correct
                     customer.UserName = name;
+                    exit = true;
                 }
                 else
                 {
-                    Console.WriteLine("Error: invalid name, try again please");
-                    error = true;
+                    message = "Error: invalid name, press any key to retry";
+                    Program.MessageError(message, 3);
                 }
 
-            } while (error);
+            } while (!exit);
 
 
             // Check surname format
             do
             {
-                error = false;
+                exit = false;
 
                 Console.Write("Surname: ");
                 surname = Console.ReadLine();
@@ -195,75 +178,101 @@ namespace Proyecto_Modulo_1
                 {
                     // Name is correct
                     customer.UserSurname = surname;
+                    exit = true;
                 }
                 else
                 {
-                    Console.WriteLine("Error: invalid surname, try again please");
-                    error = true;
+                    message = "Error: invalid surname, press any key to retry";
+                    Program.MessageError(message, 3);
                 }
 
-            } while (error);
+            } while (!exit);
 
             // Check the date format
             do
             {
-                error = false;
+                exit = false;
+
                 try
                 {
                     Console.Write("Birthdate: ");
-                    birthdate = Convert.ToDateTime(Console.ReadLine());
+                    customer.BirthDate = Convert.ToDateTime(Console.ReadLine());
+                    exit = true;
                 }
                 catch (FormatException)
                 {
-                    Console.WriteLine("Error: date format error, try again please");
-                    error = true;
+                    message = "Error: invalid date, press any key to retry";
+                    Program.MessageError(message, 3);
                 }
 
-            } while (error);
-            customer.BirthDate = birthdate;
+            } while (!exit);
+
 
             // Check the Email format
             do
             {
-                error = false;
+                exit = false;
 
                 Console.Write("Email: ");
                 email = Console.ReadLine();
 
-                //if (new EmailAddressAttribute().IsValid(email))
+                // get EmailIsValid bool to check if is correct
                 if (EmailValidator.EmailIsValid(email) && email.Length <= 50)
                 {
                     // email is correct
                     customer.Email = email;
+                    exit = true;
                 }
                 else
                 {
-                    Console.WriteLine("Error: email format error, try again please");
-                    error = true;
+                    message = "Error: invalid email, press any key to retry";
+                    Program.MessageError(message, 3);
                 }
 
-            } while (error);
+            } while (!exit);
 
             // Check the password format
             // 8 characters minimal
             do
             {
-                error = false;
+                exit = false;
 
-                Console.Write("Password (min 8, max 16 characters): ");
-                pass = Console.ReadLine();
+                Console.WriteLine("Password, min 8, max 16 characters");
+                Console.Write("Password: ");
 
-                if (pass.Length >= 8 && pass.Length <= 16)
+                // Hide and get password 1
+                pass1 = HidePassword();
+                Console.WriteLine();
+
+                // if pass1 is correct, continue with pass2
+                if (pass1.Length >= 8 && pass1.Length <= 16)
                 {
-                    // pass is correct
-                    customer.UserPass = pass;
+                    Console.Write("Repeat password: ");
+
+                    // Hide and get password 2
+                    pass2 = HidePassword();
+                    Console.WriteLine();
+
+                    // Compare if pass1 = pass2
+                    if (pass1 == pass2)
+                    {
+                        Console.WriteLine("Password created successfully.");
+                        customer.UserPass = pass1;
+                        exit = true;
+                    }
+                    else
+                    {
+                        message = "Passwords do not match, press any key to retry.";
+                        Program.MessageError(message, 5);
+                    }
                 }
                 else
                 {
-                    Console.WriteLine("Error: password format error, try again please");
-                    error = true;
+                    message = "Error: password format error, press any key to retry";
+                    Program.MessageError(message, 4);
                 }
-            } while (error);
+
+            } while (!exit);
 
             Console.WriteLine();
 
@@ -271,17 +280,17 @@ namespace Proyecto_Modulo_1
             if (InsertUserIntoDatabase(customer))
             {
                 Console.WriteLine("User created successfully");
-                Thread.Sleep(1500);
+                Console.WriteLine("Press any key to continue");
+                Console.ReadLine();
             }
             else
             {
                 Console.WriteLine("Error writing to database");
-                Console.WriteLine("Please try again");
-                Thread.Sleep(1500);
+                Console.WriteLine("Please try again, press any key to continue");
+                Console.ReadLine();
             }
-
         }
-        
+
         private static bool InsertUserIntoDatabase(Customer customer)
         {
             try
@@ -300,6 +309,38 @@ namespace Proyecto_Modulo_1
                 Console.WriteLine(e.Message);
                 return false;
             }
+        }
+
+        private static string HidePassword()
+        {
+            string password = string.Empty;
+            ConsoleKeyInfo key;
+
+            do
+            {
+                key = Console.ReadKey(true);
+
+                // Ignore enter and backspace keys
+                if (key.Key != ConsoleKey.Enter &&
+                    key.Key != ConsoleKey.Backspace &&
+                    key.Key != ConsoleKey.Escape &&
+                    key.Key != ConsoleKey.Delete)
+                {
+                    // Append the character to the password
+                    password += key.KeyChar;
+                    Console.Write("*");
+                }
+                // if key is backspace remove latest char
+                else if (key.Key == ConsoleKey.Backspace && password.Length > 0)
+                {
+                    password = password.Remove(password.Length - 1);
+                    Console.Write("\b \b");
+                }
+
+                // exit if enter key is pressed
+            } while (key.Key != ConsoleKey.Enter);
+
+            return password;
         }
 
         private static Customer CheckIfPasswordIsOk(string email, string password)

@@ -89,7 +89,7 @@ namespace Proyecto_Modulo_1
                         Rental.RentMovie(filmList, customer);
                         break;
                     case "3":
-                        Rental.MyRentals(customer);
+                        Rental.MyRentals(filmList, customer);
                         break;
                     case "4":
                         Console.WriteLine("Are you sure you want to logout? (\"yes\" to confirm, any key to Cancel)");
@@ -108,6 +108,32 @@ namespace Proyecto_Modulo_1
                 Console.Clear();
 
             } while (!exit);
+        }
+
+        public static void Splash()
+        {
+            Console.WriteLine();
+            Console.WriteLine("  ██╗░░░██╗██╗██████╗░███████╗░█████╗░ ");
+            Console.WriteLine("  ██║░░░██║██║██╔══██╗██╔════╝██╔══██╗ ");
+            Console.WriteLine("  ╚██╗░██╔╝██║██║░░██║█████╗░░██║░░██║ ");
+            Console.WriteLine("  ░╚████╔╝░██║██║░░██║██╔══╝░░██║░░██║ ");
+            Console.WriteLine("  ░░╚██╔╝░░██║██████╔╝███████╗╚█████╔╝ ");
+            Console.WriteLine("  ░░░╚═╝░░░╚═╝╚═════╝░╚══════╝░╚════╝░ ");
+            Console.WriteLine();
+
+            Console.WriteLine("      Y O U R   L O G O   H E R E");
+
+            Thread.Sleep(1000);
+
+            Console.WriteLine();
+            Console.WriteLine("   ░█████╗░██╗░░░░░██╗░░░██╗██████╗░");
+            Console.WriteLine("   ██╔══██╗██║░░░░░██║░░░██║██╔══██╗");
+            Console.WriteLine("   ██║░░╚═╝██║░░░░░██║░░░██║██████╦╝");
+            Console.WriteLine("   ██║░░██╗██║░░░░░██║░░░██║██╔══██╗");
+            Console.WriteLine("   ╚█████╔╝███████╗╚██████╔╝██████╦╝");
+            Console.WriteLine("   ░╚════╝░╚══════╝░╚═════╝░╚═════╝░");
+
+            Thread.Sleep(2000);
         }
 
         public static void LogoHeader()

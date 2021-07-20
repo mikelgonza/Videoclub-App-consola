@@ -33,22 +33,30 @@ namespace Proyecto_Modulo_1
         public static void ShowAvailableMovies(List<Film> filmList, Customer customer)
         {
             bool exit = false;
+            int userAge = DateTime.Now.Year - customer.BirthDate.Year;
 
             Console.Clear();
 
             // Show Header
             Menu.LogoHeader();
             Console.WriteLine("* LIST OF MOVIES *");
+            Console.WriteLine($"User: {customer.Email}  Age: {userAge}");
 
             // Show Film list with age restriction
-            Film.ShowFilmList(filmList, customer);
+            Film.ShowFilmList(filmList, customer, true);
 
             do
             {
                 Console.WriteLine("Press 0 to exit.");
                 string option = Console.ReadLine();
                 if (option == "0")
+                {
                     exit = true;
+                }
+                else
+                {
+                    Program.ClearConsoleLines(2);
+                }
 
             } while (!exit);
         }
@@ -56,19 +64,22 @@ namespace Proyecto_Modulo_1
         public static void RentMovie(List<Film> filmList, Customer customer)
         {
             bool exit = false;
+            string message;
+            int userAge = DateTime.Now.Year - customer.BirthDate.Year;
 
             Console.Clear();
 
             // Show Header
             Menu.LogoHeader();
             Console.WriteLine("* LIST OF MOVIES AVAILABLES FOR RENT*");
+            Console.WriteLine($"User: {customer.Email}  Age: {userAge}");
 
             // Show Film list with age restriction and available for rent
-            Film.ShowFilmListAvailable(filmList, customer);
+            Film.ShowFilmList(filmList, customer, false);
 
             do
             {
-                Console.Write("Enter the movie number to rent, 0 to Cancel: ");
+                Console.Write("Enter the movie number to rent, 0 to Exit: ");
                 string option = Console.ReadLine();
 
                 // Check if option is a number
@@ -89,9 +100,8 @@ namespace Proyecto_Modulo_1
                             // Check if insert rental to database is NOT ok
                             if (!InsertRentalToDatabase(customer, filmSelected, filmList))
                             {
-                                Console.WriteLine("Error writing to database");
-                                Console.WriteLine("Please try again, press any key to continue");
-                                Console.ReadLine();
+                                message = "Error writing to database, press any key to retry";
+                                Program.MessageError(message, 4);
                             }
                             else // if insert to database is ok
                             {
@@ -108,15 +118,15 @@ namespace Proyecto_Modulo_1
                                 }
                                 else
                                 {
-                                    Console.WriteLine("Sorry, error writing to database");
-                                    Console.WriteLine("Please try again, press any key to continue");
-                                    Console.ReadLine();
+                                    message = "Error writing to database, press any key to retry";
+                                    Program.MessageError(message, 4);
                                 }
                             }
                         }
                         else
                         {
-                            Console.WriteLine("Error: number is not valid");
+                            message = "Error: number is not valid, press any key to retry";
+                            Program.MessageError(message, 4);
                         }
                     }
                     else
@@ -127,20 +137,21 @@ namespace Proyecto_Modulo_1
                 }
                 else
                 {
-                    Console.WriteLine("Error: wrong option");
+                    message = "Error: wrong option, press any key to retry";
+                    Program.MessageError(message, 3);
                 }
 
             } while (!exit);
         }
 
-        public static void MyRentals(Customer customer)
+        public static void MyRentals(List<Film> filmList, Customer customer)
         {
             bool areFilmsPending = false;
+            string message;
             DateTime dateToday = DateTime.Today;
+            Rental rentalSelected = new Rental();
+            Film filmSelected = new Film();
             List<Rental> rentalList = new List<Rental>();
-
-            // Show Header
-            Menu.LogoHeader();
 
             // Search rentals of customer
             string query = $"SELECT Rental.Id, Rental.FilmId, Film.Title, Rental.RentalDate, Rental.ReturnDate, Rental.ReturnedDate FROM Rental LEFT JOIN Film ON Film.Id = Rental.FilmId WHERE Rental.CustomerEmail = '{customer.Email}'";
@@ -149,8 +160,12 @@ namespace Proyecto_Modulo_1
             connection.Open();
             SqlDataReader reader = command.ExecuteReader();
 
+            // Header
+            Console.Clear();
+            Menu.LogoHeader();
+            Console.WriteLine($"* MY FILMS RENTED * user: {customer.Email} *");
 
-            // If there are results, create list and show it
+            // If there are results, create object list and show it
             if (reader.HasRows)
             {
                 int listNum = 1;
@@ -181,27 +196,110 @@ namespace Proyecto_Modulo_1
                 connection.Close();
 
                 // Show the rental list of user
-                ShowUserRentalList(customer, rentalList, areFilmsPending);
+                ShowUserRentalList(customer, rentalList, filmList);
 
+                // If there are films pending, show message
+                if (areFilmsPending)
+                {
+                    bool exit = false;
+
+                    // Ask if want to return film
+                    do
+                    {
+                        Console.WriteLine();
+                        Console.WriteLine("You have movies pending to return, do you want to return any now?");
+                        Console.Write("Enter the number to return the movie, or 0 to exit: ");
+                        string option = Console.ReadLine();
+
+                        Console.WriteLine();
+
+                        // Check if option is a number
+                        if (int.TryParse(option, out int rentalNum))
+                        {
+                            if (rentalNum != 0)
+                            {
+                                // get rental object from rentalList
+                                foreach (var rental in rentalList)
+                                {
+                                    if (rental.ListNum == rentalNum)
+                                    {
+                                        rentalSelected = rental;
+                                        break;
+                                    }
+                                }
+
+                                // get film object from filmList
+                                foreach (var film in filmList)
+                                {
+                                    if (film.Id == rentalSelected.FilmId)
+                                    {
+                                        filmSelected = film;
+                                        break;
+                                    }
+                                }
+
+                                // Return film, and check if the data has not been written successfully
+                                if (!ReturnFilm(rentalSelected, customer))
+                                {
+                                    message = "Error with rental number, press any key to retry";
+                                    Program.MessageError(message, 6);
+                                }
+                                else
+                                {
+                                    exit = true;
+                                    Console.WriteLine("Movie returned successfully.");
+
+                                    // Check update availability to database
+                                    if (UpdateFilmAvailability(filmSelected, false))
+                                    {
+                                        Console.WriteLine("Updated film availability successfully");
+                                        Console.WriteLine("Press any key to continue");
+                                        Console.ReadLine();
+                                    }
+                                    else
+                                    {
+                                        message = "Sorry, error writing to database, press any key to retry";
+                                        Program.MessageError(message, 6);
+                                    }
+                                    MyRentals(filmList, customer);
+                                }
+                            }
+                            else
+                            {
+                                exit = true;
+                            }
+                        }
+                        // if option is not a number
+                        else
+                        {
+                            message = "Wrong answer, any key to retry";
+                            Program.MessageError(message, 6);
+                        }
+
+                    } while (!exit);
+                }
+                // If there are no films pending, show message
+                else
+                {
+                    Console.WriteLine("You have no films pending return.");
+                    Console.WriteLine("Press any key to exit");
+                    Console.ReadLine();
+                }
             }
             // If there are no movie rented, show message
             else
             {
+                connection.Close();
+                
                 Console.WriteLine("─────────────────────────────────────────────────────");
                 Console.WriteLine();
-                Console.WriteLine("There is no movie rented");
+                Console.WriteLine("There is no movie rented, press any key to continue");
+                Console.ReadLine();
             }
-
-            connection.Close();
         }
 
-        private static void ShowUserRentalList(Customer customer, List<Rental> rentalList, bool areFilmsPending)
+        private static void ShowUserRentalList(Customer customer, List<Rental> rentalList, List<Film> filmList)
         {
-
-            Console.Clear();
-            Console.WriteLine($"User: {customer.Email}");
-            Console.WriteLine("MY FILMS RENTED");
-
             foreach (var rental in rentalList)
             {
                 bool returnDatePassed = DateTime.Today > rental.ReturnDate && rental.ReturnedDate == new DateTime();
@@ -224,71 +322,12 @@ namespace Proyecto_Modulo_1
                     Console.WriteLine($"Returned date: {rental.ReturnedDate.ToShortDateString()}");
 
                 if (returnDatePassed)
-                    Console.WriteLine("DELIVERY DATE PASSED");
+                    Console.WriteLine($"Today is: {DateTime.Today.ToShortDateString()} - RETURN DATE PASSED");
 
                 Console.ResetColor();
             }
             Console.WriteLine("─────────────────────────────────────────────────────");
             Console.WriteLine();
-
-            // If there are films pending, show message
-            if (areFilmsPending)
-            {
-                bool exit = false;
-
-                // Ask if want to return film
-                do
-                {
-                    Console.WriteLine();
-                    Console.WriteLine("You have movies pending to return, do you want to return any now?");
-                    Console.Write("Enter rental number, or enter 0 to exit: ");
-                    string option = Console.ReadLine();
-
-                    Console.WriteLine();
-
-                    // Check if option is a number
-                    if (int.TryParse(option, out int rentalNum))
-                    {
-                        if (rentalNum != 0)
-                        {
-                            // Return film, and check if the data has been written successfully
-                            if (ReturnFilm(rentalNum, customer, rentalList))
-                            {
-                                exit = true;
-                                Console.WriteLine("Movie returned successfully.");
-                                Console.WriteLine("Press any key to continue");
-                                Console.ReadLine();
-                                MyRentals(customer);
-                            }
-                            else
-                            {
-                                Console.WriteLine("Error with rental number");
-                                Console.WriteLine("Please try again, press any key to continue");
-                                Console.ReadLine();
-                            }
-                        }
-                        else
-                        {
-                            exit = true;
-                        }
-                    }
-                    else
-                    {
-                        // If is not number
-                        Console.WriteLine("Wrong answer, enter the number or film, or 0 to exit");
-                    }
-
-                } while (!exit);
-            }
-            // If there are no films pending, show message
-            else
-            {
-                Console.WriteLine("You have no films pending return.");
-                Console.WriteLine("Press any key to exit");
-                Console.ReadLine();
-            }
-
-
         }
 
         private static bool InsertRentalToDatabase(Customer customer, Film film, List<Film> filmList)
@@ -339,16 +378,9 @@ namespace Proyecto_Modulo_1
             }
         }
 
-        private static bool ReturnFilm(int rentalNum, Customer customer, List<Rental> rentalList)
+        private static bool ReturnFilm(Rental rentalSelected, Customer customer)
         {
             DateTime returnedDate = DateTime.Today;
-            Rental rentalSelected = new Rental();
-
-            foreach (var rental in rentalList)
-            {
-                if (rental.ListNum == rentalNum)
-                    rentalSelected = rental;
-            }
 
             try
             {

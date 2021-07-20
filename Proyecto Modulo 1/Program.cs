@@ -12,30 +12,32 @@ namespace Proyecto_Modulo_1
             Console.Title = " V I D E O   C L U B ";
 
             Console.Clear();
-            //Console.WriteLine();
-            //Console.WriteLine("  ██╗░░░██╗██╗██████╗░███████╗░█████╗░ ");
-            //Console.WriteLine("  ██║░░░██║██║██╔══██╗██╔════╝██╔══██╗ ");
-            //Console.WriteLine("  ╚██╗░██╔╝██║██║░░██║█████╗░░██║░░██║ ");
-            //Console.WriteLine("  ░╚████╔╝░██║██║░░██║██╔══╝░░██║░░██║ ");
-            //Console.WriteLine("  ░░╚██╔╝░░██║██████╔╝███████╗╚█████╔╝ ");
-            //Console.WriteLine("  ░░░╚═╝░░░╚═╝╚═════╝░╚══════╝░╚════╝░ ");
-            //Console.WriteLine();
 
-            //Thread.Sleep(1000);
-
-            //Console.WriteLine();
-            //Console.WriteLine("   ░█████╗░██╗░░░░░██╗░░░██╗██████╗░");
-            //Console.WriteLine("   ██╔══██╗██║░░░░░██║░░░██║██╔══██╗");
-            //Console.WriteLine("   ██║░░╚═╝██║░░░░░██║░░░██║██████╦╝");
-            //Console.WriteLine("   ██║░░██╗██║░░░░░██║░░░██║██╔══██╗");
-            //Console.WriteLine("   ╚█████╔╝███████╗╚██████╔╝██████╦╝");
-            //Console.WriteLine("   ░╚════╝░╚══════╝░╚═════╝░╚═════╝░");
-
-            //Thread.Sleep(2000);
+            // Splash
+            Menu.Splash();
 
             // Menu login
             Menu.MenuLogin();
-
         }
+
+        public static void ClearConsoleLines(int lines)
+        {
+            for (int i = 0; i < lines; i++)
+            {
+                Console.SetCursorPosition(0, Console.CursorTop - 1);
+                int currentLineCursor = Console.CursorTop;
+                Console.SetCursorPosition(0, Console.CursorTop);
+                Console.Write(new string(' ', Console.WindowWidth));
+                Console.SetCursorPosition(0, currentLineCursor);
+            }
+        }
+
+        public static void MessageError(string message, int linesToClear)
+        {
+            Console.WriteLine(message);
+            Console.ReadLine();
+            Program.ClearConsoleLines(linesToClear);
+        }
+
     }
 }

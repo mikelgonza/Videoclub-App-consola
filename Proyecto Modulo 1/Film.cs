@@ -50,49 +50,35 @@ namespace Proyecto_Modulo_1
             return filmList;
         }
 
-        public static void ShowFilmList(List<Film> filmList, Customer customer)
+        public static void ShowFilmList(List<Film> filmList, Customer customer, bool showRented)
         {
+            Console.WriteLine();
+
             foreach (var film in filmList)
             {
-                string rented;
+                string availability;
+                string age = film.RecommendedAge.ToString();
 
                 if (film.Rented)
-                    rented = "Yes";
+                    availability = "No";
                 else
-                    rented = "No";
+                    availability = "Yes";
 
-                Console.WriteLine();
-                Console.WriteLine($"Number: {film.Id}");
-                Console.WriteLine($"Title: {film.Title}");
-                Console.WriteLine($"Synopsis: {film.Synopsis}");
-                Console.WriteLine($"Recommended age: {film.RecommendedAge}");
-                Console.WriteLine($"Is rented?: {rented}");
-                Console.WriteLine();
-            }
-        }
+                if (film.RecommendedAge == 0)
+                    age = "All";
 
-        public static void ShowFilmListAvailable(List<Film> filmList, Customer customer)
-        {
-            foreach (var film in filmList)
-            {
-                string rented;
-
-                if (film.Rented)
-                    rented = "Yes";
-                else
-                    rented = "No";
-
-                if (film.Rented == false)
+                if (!film.Rented || showRented)
                 {
-                    Console.WriteLine();
+                    Console.WriteLine("─────────────────────────────────────────────────────");
                     Console.WriteLine($"Number: {film.Id}");
                     Console.WriteLine($"Title: {film.Title}");
                     Console.WriteLine($"Synopsis: {film.Synopsis}");
-                    Console.WriteLine($"Recommended age: {film.RecommendedAge}");
-                    Console.WriteLine($"Is rented?: {rented}");
-                    Console.WriteLine();
+                    Console.WriteLine($"Recommended age: {age}");
+                    Console.WriteLine($"Available: {availability}");
                 }
             }
+            Console.WriteLine("─────────────────────────────────────────────────────");
+            Console.WriteLine();
         }
 
         public static Film SearchMovieInList(List<Film> filmList, int filmNumber)
@@ -105,6 +91,5 @@ namespace Proyecto_Modulo_1
 
             return null;
         }
-
     }
 }
